@@ -25,6 +25,16 @@ func main() {
 	}
 	print(chat)
 
+	msg, err := client.SendMessage(telegram.SendMessageRequest{
+		ChatID:    "@move_it_move",
+		Text:      `> "Great things are not done by impulse, but by a series of small things brought together\." — Vincent Van Gogh`,
+		ParseMode: telegram.MarkdownV2,
+	})
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	print(msg)
 }
 
 func print[T any](data T) {

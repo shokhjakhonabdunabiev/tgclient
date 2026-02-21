@@ -57,4 +57,8 @@ type ChatFullInfo struct {
 }
 
 type Message struct {
+	MessageID       int  `json:"message_id"`
+	MessageThreadID int  `json:"message_thread_id"`
+	Date            int  `json:"date"`
+	Chat            Chat `json:"chat"`
 }

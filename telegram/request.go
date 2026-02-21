@@ -1,6 +1,7 @@
 package telegram
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -11,7 +12,7 @@ import (
 func (c *Client) get(method string, params any) (*Response, error) {
 	u, err := url.Parse(c.baseURL + "/" + method)
 	if err != nil {
-		return nil, fmt.Errorf("url parsing failed: %w", err)
+		return nil, fmt.Errorf("failed to parse url: %w", err)
 	}
 
 	q, err := structToQuery(params)
@@ -21,6 +22,46 @@ func (c *Client) get(method string, params any) (*Response, error) {
 	u.RawQuery = q.Encode()
 
 	req, err := http.NewRequest("GET", u.String(), nil)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create request: %w", err)
+	}
+
+	res, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("failed to execute request: %w", err)
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read response body: %w", err)
+	}
+
+	var apiRes Response
+	if err := json.Unmarshal(body, &apiRes); err != nil {
+		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
+	}
+
+	if !apiRes.OK {
+		return nil, fmt.Errorf("telegram BOT API error: %s (code %d)", apiRes.Description, apiRes.ErrorCode)
+	}
+
+	return &apiRes, nil
+
+}
+
+func (c *Client) post(method string, payload any) (*Response, error) {
+	u, err := url.Parse(c.baseURL + "/" + method)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse url: %w", err)
+	}
+
+	jsonBody, err := json.Marshal(payload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal payload: %w", err)
+	}
+
+	req, err := http.NewRequest("POST", u.String(), bytes.NewReader(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
@@ -47,10 +88,7 @@ func (c *Client) get(method string, params any) (*Response, error) {
 	}
 
 	return &apiRes, nil
-
 }
-
-func (c *Client) post(method string, payload any) {}
 
 func structToQuery(params any) (url.Values, error) {
 	values := url.Values{}

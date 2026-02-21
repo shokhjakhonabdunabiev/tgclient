@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	BaseURL = "https://api.telegram.org/bot"
+	baseURL = "https://api.telegram.org/bot"
 )
 
 type Client struct {
@@ -18,7 +18,7 @@ type Client struct {
 func NewClient(token string, timeout time.Duration) *Client {
 	return &Client{
 		token:   token,
-		baseURL: BaseURL + token,
+		baseURL: baseURL + token,
 		httpClient: &http.Client{
 			Timeout: timeout,
 		},
